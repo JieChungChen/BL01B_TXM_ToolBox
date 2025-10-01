@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TXM_ToolBox</class>
+ <widget class="QMainWindow" name="TXM_ToolBox">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Calibri</family>
+    <pointsize>12</pointsize>
+    <weight>75</weight>
+    <bold>true</bold>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>TXM ToolBox</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="imageDisplayWidget">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="imageLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>10</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>4096</width>
+          <height>4096</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>ImageViewer</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
+        <property name="scaledContents">
+         <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignBottom">
+       <widget class="QLabel" name="imageIndexLabel">
+        <property name="text">
+         <string>0/0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QScrollBar" name="imageSlider">
+        <property name="maximum">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menuLoad_Tomo">
+     <property name="title">
+      <string>Load tomo</string>
+     </property>
+     <addaction name="action_tomo_txrm"/>
+     <addaction name="action_multi_txrm"/>
+     <addaction name="action_tomo_tifs"/>
+    </widget>
+    <widget class="QMenu" name="menuLoad_mosaic">
+     <property name="title">
+      <string>Load mosaic</string>
+     </property>
+     <addaction name="action_mosaic_txrm"/>
+     <addaction name="action_mosaic_tifs"/>
+    </widget>
+    <addaction name="menuLoad_Tomo"/>
+    <addaction name="menuLoad_mosaic"/>
+    <addaction name="separator"/>
+    <addaction name="action_save_img"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Image</string>
+    </property>
+    <addaction name="action_reference"/>
+    <addaction name="action_vertical_flip"/>
+    <addaction name="action_adjust_contrast"/>
+   </widget>
+   <widget class="QMenu" name="menuTomography">
+    <property name="title">
+     <string>Tomography</string>
+    </property>
+    <addaction name="action_alignment"/>
+    <addaction name="action_reconstruction"/>
+   </widget>
+   <widget class="QMenu" name="menuMosaic">
+    <property name="title">
+     <string>Mosaic</string>
+    </property>
+    <addaction name="action_full_view"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuTomography"/>
+   <addaction name="menuMosaic"/>
+  </widget>
+  <action name="action_tomo_txrm">
+   <property name="text">
+    <string>txrm</string>
+   </property>
+  </action>
+  <action name="action_reference">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reference</string>
+   </property>
+   <property name="visible">
+    <bool>true</bool>
+   </property>
+   <property name="shortcutVisibleInContextMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="action_save_img">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="action_tomo_tifs">
+   <property name="text">
+    <string>tif folder</string>
+   </property>
+  </action>
+  <action name="action_alignment">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Alignment</string>
+   </property>
+  </action>
+  <action name="action_vertical_flip">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Vertical Flip</string>
+   </property>
+  </action>
+  <action name="action_mosaic_txrm">
+   <property name="text">
+    <string>xrm</string>
+   </property>
+  </action>
+  <action name="action_mosaic_tifs">
+   <property name="text">
+    <string>tif folder</string>
+   </property>
+  </action>
+  <action name="action_full_view">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Full view</string>
+   </property>
+  </action>
+  <action name="action_adjust_contrast">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Adjust contrast</string>
+   </property>
+  </action>
+  <action name="action_multi_txrm">
+   <property name="text">
+    <string>multi-txrm</string>
+   </property>
+  </action>
+  <action name="action_reconstruction">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reconstruction</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
