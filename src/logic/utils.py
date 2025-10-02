@@ -1,13 +1,38 @@
 import numpy as np
 
 
-def norm_to_8bit(img: np.ndarray, clip_percent=0.5, inverse=False):
-    vmin = img.min()
-    vmax = np.percentile(img, 100 - clip_percent) 
-    img = (img - vmin)/(vmax - vmin)
+def norm_to_8bit(img: np.ndarray, clip_lower=0.0, clip_upper=0.5, clip_percent=None, inverse=False):
+    """
+    Normalize image to 8-bit with percentile clipping.
+
+    Args:
+        img: Input image array
+        clip_lower: Percentage to clip from lower end (darkest pixels)
+        clip_upper: Percentage to clip from upper end (brightest pixels)
+        clip_percent: Legacy parameter for backward compatibility (clips upper only)
+        inverse: Invert the image
+
+    Returns:
+        8-bit normalized image
+    """
+    # Backward compatibility: if clip_percent is provided, use it for upper clip
+    if clip_percent is not None:
+        clip_upper = clip_percent
+        clip_lower = 0.0
+
+    vmin = np.percentile(img, clip_lower)
+    vmax = np.percentile(img, 100 - clip_upper)
+
+    # Avoid division by zero
+    if vmax == vmin:
+        vmax = vmin + 1e-7
+
+    img = (img - vmin) / (vmax - vmin)
     img = np.clip(img, 0, 1)
+
     if inverse:
         img = 1 - img
+
     img = (img * 255).astype(np.uint8)
     return img
 

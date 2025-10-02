@@ -47,6 +47,7 @@ def read_txm_raw(filename, mode):
         ole.close()
 
     reference = metadata['reference']
+    reference = np.flip(reference, axis=0)
     metadata.pop('reference', None)
     metadata.pop('reference_data_type', None)
     metadata.pop('data_type', None)

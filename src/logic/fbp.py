@@ -57,15 +57,31 @@ class FBPWorker(QThread):
     progress = pyqtSignal(int)
     finished = pyqtSignal(np.ndarray)
 
-    def __init__(self, images, angles):
+    def __init__(self, images, angles, target_size=None):
+        """
+        Initialize FBP reconstruction worker.
+
+        Args:
+            images: Input projection images (N, H, W)
+            angles: Rotation angles for each projection
+            target_size: Target resolution for reconstruction (int or None)
+                        If None, uses original resolution
+                        If int, resizes to (target_size, target_size)
+        """
         super().__init__()
-        self.images = []
-        for i in range(len(images)):
-            img_temp = Image.fromarray(images[i])
-            img_temp = img_temp.resize((128, 128))
-            self.images.append(np.array(img_temp))
-        self.images = np.array(self.images)
         self.angles = angles
+
+        # Resize images if target_size is specified
+        if target_size is not None:
+            self.images = []
+            for i in range(len(images)):
+                img_temp = Image.fromarray(images[i])
+                img_temp = img_temp.resize((target_size, target_size), Image.Resampling.LANCZOS)
+                self.images.append(np.array(img_temp))
+            self.images = np.array(self.images)
+        else:
+            # Use original resolution
+            self.images = images.copy()
 
     def run(self):
         n, h, w = self.images.shape
