@@ -104,14 +104,6 @@ BL01B_TXM_ToolBox/
 - `Mouse Click`: Center image on clicked point
 - `Drag Line`: Adjust reference line position
 
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes with clear messages
-4. Submit a pull request
-
 ## Version History
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
@@ -123,5 +115,3 @@ This project is licensed under the MIT License.
 ## Acknowledgments
 
 - Developed for BL01B beamline at NSRRC (National Synchrotron Radiation Research Center)
-- Uses PyQt5 for GUI framework
-- FBP reconstruction based on standard tomographic algorithms
