@@ -1,7 +1,11 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QLabel, QSlider, QSizePolicy,
-                              QRadioButton, QDialogButtonBox, QGroupBox)
+                              QRadioButton, QDialogButtonBox, QGroupBox, QHBoxLayout,
+                              QSpinBox, QPushButton, QFileDialog, QMessageBox)
 from PyQt5.QtGui import QImage, QPixmap, QFont
 from PyQt5.QtCore import Qt
+from PIL import Image
+import numpy as np
+import os
 
 
 class FBPResolutionDialog(QDialog):
@@ -24,6 +28,7 @@ class FBPResolutionDialog(QDialog):
         self.setFont(font)
 
         self.selected_size = 128  # Default
+        self.angle_interval = 1.0  # Default angle interval in degrees
 
         # Main layout
         layout = QVBoxLayout(self)
@@ -33,6 +38,29 @@ class FBPResolutionDialog(QDialog):
         info_label = QLabel(f"<b>Original Image Size:</b> {original_size[0]}×{original_size[1]}")
         info_label.setStyleSheet("font-family: Calibri; font-size: 13pt; padding: 12px;")
         layout.addWidget(info_label)
+
+        # Angle interval group
+        angle_group = QGroupBox("Angle Interval")
+        angle_group.setStyleSheet("font-family: Calibri; font-size: 12pt; font-weight: bold;")
+        angle_layout = QHBoxLayout()
+        angle_layout.setSpacing(10)
+
+        angle_label = QLabel("Projection angle interval:")
+        angle_label.setStyleSheet("font-family: Calibri; font-size: 12pt; font-weight: normal;")
+
+        self.angle_spinbox = QSpinBox()
+        self.angle_spinbox.setMinimum(1)
+        self.angle_spinbox.setMaximum(90)
+        self.angle_spinbox.setValue(1)
+        self.angle_spinbox.setSuffix(" degree(s)")
+        self.angle_spinbox.setStyleSheet("font-family: Calibri; font-size: 12pt;")
+        self.angle_spinbox.valueChanged.connect(self.set_angle_interval)
+
+        angle_layout.addWidget(angle_label)
+        angle_layout.addWidget(self.angle_spinbox)
+        angle_layout.addStretch()
+        angle_group.setLayout(angle_layout)
+        layout.addWidget(angle_group)
 
         # Resolution selection group
         group_box = QGroupBox("Select Reconstruction Resolution")
@@ -92,9 +120,17 @@ class FBPResolutionDialog(QDialog):
         """Set the selected reconstruction size."""
         self.selected_size = size
 
+    def set_angle_interval(self, value):
+        """Set the angle interval."""
+        self.angle_interval = float(value)
+
     def get_size(self):
         """Get the selected reconstruction size."""
         return self.selected_size
+
+    def get_angle_interval(self):
+        """Get the angle interval."""
+        return self.angle_interval
 
 
 class FBPViewer(QDialog):
@@ -133,11 +169,17 @@ class FBPViewer(QDialog):
         self.slider.setMaximum(self.n_slices - 1)
         self.slider.valueChanged.connect(self.update_image)
 
+        # Save button
+        self.save_button = QPushButton("Save Reconstruction as TIF Series")
+        self.save_button.setStyleSheet("font-family: Calibri; font-size: 12pt; padding: 8px;")
+        self.save_button.clicked.connect(self.save_reconstruction)
+
         # Layout
         layout = QVBoxLayout(self)
         layout.addWidget(self.image_label, stretch=1)
         layout.addWidget(self.info_label)
         layout.addWidget(self.slider)
+        layout.addWidget(self.save_button)
 
         self.update_image(0)
 
@@ -180,3 +222,44 @@ class FBPViewer(QDialog):
         self.info_label.setText(
             f"Resolution: {self.width}×{self.height} | Slice: {index + 1}/{self.n_slices}"
         )
+
+    def save_reconstruction(self):
+        """Save all reconstruction slices as TIF series."""
+        # Select output directory
+        output_dir = QFileDialog.getExistingDirectory(
+            self,
+            "Select Directory to Save Reconstruction",
+            "",
+            QFileDialog.ShowDirsOnly
+        )
+
+        if not output_dir:
+            return  # User cancelled
+
+        try:
+            # Save each slice with 4-digit filename starting from 0001
+            for i in range(self.n_slices):
+                filename = f"{i+1:04d}.tif"
+                filepath = os.path.join(output_dir, filename)
+
+                # Get image data
+                img_data = self.recon_images[i]
+
+                # Save as TIF using PIL
+                img_pil = Image.fromarray(img_data)
+                img_pil.save(filepath)
+
+            # Show success message
+            QMessageBox.information(
+                self,
+                "Save Complete",
+                f"Successfully saved {self.n_slices} slices to:\n{output_dir}"
+            )
+
+        except Exception as e:
+            # Show error message
+            QMessageBox.critical(
+                self,
+                "Save Error",
+                f"Failed to save reconstruction:\n{str(e)}"
+            )

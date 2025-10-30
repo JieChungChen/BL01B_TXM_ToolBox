@@ -38,7 +38,10 @@ class TXM_Images:
             return self.angles[idx]
         return None
     
-    def get_full_view(self):
+    def get_array(self):
+        return self.images
+    
+    def get_mosaic(self):
         if self.mode == 'mosaic':
             rows, cols = self.metadata['mosaic_row'], self.metadata['mosaic_column']
             mosaic = mosaic_stitching(self.images, rows, cols)
@@ -52,10 +55,11 @@ class TXM_Images:
     def flip_vertical(self):
         self.images = np.flip(self.images, axis=1)
 
+    def y_shift(self, shift_amount):
+        self.images = np.roll(self.images, shift_amount, axis=1)
+
     def apply_ref(self, ref_image):
         if ref_image is not None:
             self.ref = ref_image
             self.images = self.original / ref_image
 
-    def as_array(self):
-        return self.images

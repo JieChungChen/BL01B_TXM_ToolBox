@@ -6,18 +6,18 @@ from PIL import Image
 
 
 class MosaicPreviewDialog(QDialog):
-    def __init__(self, mosaic_img: np.ndarray, metadata=None, parent=None):
+    def __init__(self, mosaic_img, info):
         """
         Mosaic preview dialog with contrast adjustment.
 
         Args:
             mosaic_img: Stitched mosaic image (H, W)
-            metadata: Dictionary containing mosaic_row, mosaic_column info
-            parent: Parent widget
+            info: AppContext
         """
-        super().__init__(parent)
+        super().__init__()
         self.mosaic_img = mosaic_img  # shape: (H, W)
-        self.metadata = metadata or {}
+        self.info = info
+        self.metadata = info.metadata or {}
         self.clip_lower = 0.0  # Lower clip percentage
         self.clip_upper = 0.5  # Upper clip percentage
 
@@ -163,7 +163,6 @@ class MosaicPreviewDialog(QDialog):
         self.qimg = QImage(self.img_8bit.data, w, h, w, QImage.Format_Grayscale8)
 
     def update_display(self):
-        """Update displayed image, scaling to fit current window size."""
         if self.qimg is None:
             return
 
@@ -180,17 +179,13 @@ class MosaicPreviewDialog(QDialog):
             self.img_label.setPixmap(scaled_pixmap)
 
     def resizeEvent(self, event):
-        """Handle window resize events."""
         super().resizeEvent(event)
-        # Only update display (scale), not reprocess image data
         self.update_display()
 
     def save_image(self):
         """Save the processed mosaic image."""
-        default_name = f"mosaic_{self.width}x{self.height}.tif"
-        filename, _ = QFileDialog.getSaveFileName(
-            self, "Save mosaic", default_name, "TIFF files (*.tif)"
-        )
+        sample_name = f"{self.info.sample_name}.tif"
+        filename, _ = QFileDialog.getSaveFileName(self, "Save mosaic", sample_name, "TIFF files (*.tif)")
         if filename:
             Image.fromarray(self.img_8bit).save(filename)
             QMessageBox.information(self, "Save Complete", f"Mosaic saved to:\n{filename}")

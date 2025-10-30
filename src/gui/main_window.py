@@ -114,6 +114,9 @@ class Ui_TXM_ToolBox(object):
         self.action_reconstruction = QtWidgets.QAction(TXM_ToolBox)
         self.action_reconstruction.setEnabled(False)
         self.action_reconstruction.setObjectName("action_reconstruction")
+        self.action_y_shift = QtWidgets.QAction(TXM_ToolBox)
+        self.action_y_shift.setEnabled(False)
+        self.action_y_shift.setObjectName("action_y_shift")
         self.menuLoad_Tomo.addAction(self.action_tomo_txrm)
         self.menuLoad_Tomo.addAction(self.action_multi_txrm)
         self.menuLoad_Tomo.addAction(self.action_tomo_tifs)
@@ -125,6 +128,7 @@ class Ui_TXM_ToolBox(object):
         self.menuFile.addAction(self.action_save_img)
         self.menuEdit.addAction(self.action_reference)
         self.menuEdit.addAction(self.action_vertical_flip)
+        self.menuEdit.addAction(self.action_y_shift)
         self.menuEdit.addAction(self.action_adjust_contrast)
         self.menuTomography.addAction(self.action_alignment)
         self.menuTomography.addAction(self.action_reconstruction)
@@ -160,13 +164,4 @@ class Ui_TXM_ToolBox(object):
         self.action_adjust_contrast.setText(_translate("TXM_ToolBox", "Adjust contrast"))
         self.action_multi_txrm.setText(_translate("TXM_ToolBox", "multi-txrm"))
         self.action_reconstruction.setText(_translate("TXM_ToolBox", "Reconstruction"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    TXM_ToolBox = QtWidgets.QMainWindow()
-    ui = Ui_TXM_ToolBox()
-    ui.setupUi(TXM_ToolBox)
-    TXM_ToolBox.show()
-    sys.exit(app.exec_())
+        self.action_y_shift.setText(_translate("TXM_ToolBox", "Y-axis Shift"))

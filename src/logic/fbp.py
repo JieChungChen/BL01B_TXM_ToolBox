@@ -57,19 +57,30 @@ class FBPWorker(QThread):
     progress = pyqtSignal(int)
     finished = pyqtSignal(np.ndarray)
 
-    def __init__(self, images, angles, target_size=None):
+    def __init__(self, images, angles, target_size=None, angle_interval=1.0):
         """
         Initialize FBP reconstruction worker.
 
         Args:
             images: Input projection images (N, H, W)
-            angles: Rotation angles for each projection
+            angles: Rotation angles for each projection (can be None)
             target_size: Target resolution for reconstruction (int or None)
                         If None, uses original resolution
                         If int, resizes to (target_size, target_size)
+            angle_interval: Angle interval in degrees (default: 1.0)
         """
         super().__init__()
-        self.angles = angles
+
+        # Generate angle array based on number of images and interval
+        n_images = len(images)
+        if angles is None or len(angles) == 0:
+            # Generate angles based on interval
+            # Assume symmetric scan from -90 to +90
+            self.angles = np.arange(n_images) * angle_interval - 90.0
+        else:
+            # Use provided angles but respect the interval
+            # Reconstruct angles based on image count and interval
+            self.angles = np.arange(n_images) * angle_interval + angles[0]
 
         # Resize images if target_size is specified
         if target_size is not None:

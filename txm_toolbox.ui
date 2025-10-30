@@ -141,6 +141,7 @@
     </property>
     <addaction name="action_reference"/>
     <addaction name="action_vertical_flip"/>
+    <addaction name="action_y_shift"/>
     <addaction name="action_adjust_contrast"/>
    </widget>
    <widget class="QMenu" name="menuTomography">
@@ -246,6 +247,14 @@
    </property>
    <property name="text">
     <string>Reconstruction</string>
+   </property>
+  </action>
+  <action name="action_y_shift">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Y-axis Shift</string>
    </property>
   </action>
  </widget>

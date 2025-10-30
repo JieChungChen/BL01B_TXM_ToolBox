@@ -2,7 +2,7 @@ import os, glob, olefile, struct
 import numpy as np
 from PIL import Image
 from math import sqrt
-from src.logic.utils import split_mosaic
+from src.logic.utils import split_mosaic, norm_to_8bit
 
 
 def read_txm_raw(filename, mode):
@@ -47,7 +47,9 @@ def read_txm_raw(filename, mode):
         ole.close()
 
     reference = metadata['reference']
-    reference = np.flip(reference, axis=0)
+    if reference is not None :
+        reference = np.flip(reference, axis=0)
+
     metadata.pop('reference', None)
     metadata.pop('reference_data_type', None)
     metadata.pop('data_type', None)
@@ -99,10 +101,16 @@ def load_ref(filename):
     return ref_img
 
 
-def save_tif(folder, sample_name, imgs):
+def save_tif(folder, sample_name, imgs, mode='each'):
     sample_name = os.path.splitext(sample_name)[0]
-    imgs = imgs/imgs.max()
-    imgs = (imgs*255).astype(np.uint8)
+    if mode == 'global':
+        imgs = imgs/imgs.max()
+        imgs = (imgs*255).astype(np.uint8)
+    elif mode == 'each':
+        for i in range(len(imgs)):
+            imgs[i] = norm_to_8bit(imgs[i])
+        imgs = imgs.astype(np.uint8)
+
     for i in range(len(imgs)):  
         img_temp = imgs[i] 
         img_temp = Image.fromarray(img_temp)

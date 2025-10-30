@@ -203,5 +203,5 @@ class AlignViewer(QDialog):
 
     def accept(self):
         for i, img in enumerate(self.proj_images):
-            self.tomo.set(i, img)  # 更新 Tomography 中的對應圖片
+            self.tomo.set(i, img)
         super().accept()

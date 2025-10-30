@@ -1,6 +1,6 @@
 """Decorators for error handling and logging."""
-
 import functools
+import traceback
 from PyQt5.QtWidgets import QMessageBox
 
 
@@ -15,7 +15,6 @@ def handle_errors(title="Error"):
                 error_msg = f"An error occurred: {str(e)}"
                 QMessageBox.critical(self, title, error_msg)
                 print(f"Error in {func.__name__}: {e}")
-                import traceback
                 traceback.print_exc()
         return wrapper
     return decorator
