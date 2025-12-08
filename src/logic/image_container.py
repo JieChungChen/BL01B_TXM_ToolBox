@@ -1,5 +1,5 @@
 import numpy as np
-from src.logic.utils import mosaic_stitching, norm_to_8bit
+from src.logic.utils import mosaic_stitching, norm_to_8bit, image_resize
 
 
 class TXM_Images:
@@ -61,5 +61,8 @@ class TXM_Images:
     def apply_ref(self, ref_image):
         if ref_image is not None:
             self.ref = ref_image
-            self.images = self.original / ref_image
+            if self.images.shape[-1] != self.ref.shape[-1]:
+                self.images = self.original / image_resize(ref_image, self.images.shape[-1])
+            else:
+                self.images = self.original / ref_image
 

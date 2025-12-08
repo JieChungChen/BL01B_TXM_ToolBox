@@ -44,6 +44,7 @@ def read_txm_raw(filename, mode):
         data_type = data_type.newbyteorder('<')
         image = np.reshape(np.frombuffer(data, data_type), (metadata["image_height"],  metadata["image_width"]))
         image = np.flip(image, axis=0)
+        image = image[None, ...] 
         ole.close()
 
     reference = metadata['reference']
@@ -59,7 +60,7 @@ def read_txm_raw(filename, mode):
     if mode == 'mosaic':
         return raw_imgs, metadata, reference
     if mode == 'single':
-        return image, metadata
+        return image, metadata, reference
 
 
 def read_multiple_txrm(filelist):
@@ -95,13 +96,14 @@ def load_tif_folder(folder):
 def load_ref(filename):
     image_type = filename.split('.')[-1]
     if image_type=='xrm':
-        ref_img, metadata = read_txm_raw(filename, 'single')
+        ref_img, metadata, _ = read_txm_raw(filename, 'single')
     else:
         ref_img = Image.open(filename)
     return ref_img
 
 
-def save_tif(folder, sample_name, imgs, mode='each'):
+def save_tif(folder, sample_name, imgs, mode):
+    imgs = imgs.copy()
     sample_name = os.path.splitext(sample_name)[0]
     if mode == 'global':
         imgs = imgs/imgs.max()

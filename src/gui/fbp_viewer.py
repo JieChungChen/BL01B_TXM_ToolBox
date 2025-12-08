@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QLabel, QSlider, QSizePolicy,
 from PyQt5.QtGui import QImage, QPixmap, QFont
 from PyQt5.QtCore import Qt
 from PIL import Image
-import numpy as np
 import os
 
 
@@ -134,14 +133,12 @@ class FBPResolutionDialog(QDialog):
 
 
 class FBPViewer(QDialog):
-    """Viewer for displaying FBP reconstruction results."""
-
     def __init__(self, recon_images, parent=None):
         super().__init__(parent)
+        self.sample_name = parent.context.sample_name
         self.recon_images = recon_images
         self.current_index = 0
 
-        # Get reconstruction dimensions
         self.n_slices, self.height, self.width = recon_images.shape
 
         # Set window properties
@@ -215,41 +212,30 @@ class FBPViewer(QDialog):
 
         # Update window title
         self.setWindowTitle(
-            f"FBP Reconstruction - {self.width}×{self.height} - Slice {index + 1}/{self.n_slices}"
+            f"FBP Reconstruction - {self.width}x{self.height} - Slice {index + 1}/{self.n_slices}"
         )
 
         # Update info label
         self.info_label.setText(
-            f"Resolution: {self.width}×{self.height} | Slice: {index + 1}/{self.n_slices}"
+            f"Resolution: {self.width}x{self.height} | Slice: {index + 1}/{self.n_slices}"
         )
 
     def save_reconstruction(self):
         """Save all reconstruction slices as TIF series."""
-        # Select output directory
-        output_dir = QFileDialog.getExistingDirectory(
-            self,
-            "Select Directory to Save Reconstruction",
-            "",
-            QFileDialog.ShowDirsOnly
-        )
+        output_dir = QFileDialog.getExistingDirectory(self, "Select Directory to Save Reconstruction", "", QFileDialog.ShowDirsOnly)
 
         if not output_dir:
-            return  # User cancelled
+            return
 
         try:
-            # Save each slice with 4-digit filename starting from 0001
             for i in range(self.n_slices):
-                filename = f"{i+1:04d}.tif"
+                filename = f"{self.sample_name}_{i+1:04d}.tif"
                 filepath = os.path.join(output_dir, filename)
 
-                # Get image data
                 img_data = self.recon_images[i]
-
-                # Save as TIF using PIL
                 img_pil = Image.fromarray(img_data)
                 img_pil.save(filepath)
 
-            # Show success message
             QMessageBox.information(
                 self,
                 "Save Complete",
@@ -257,7 +243,6 @@ class FBPViewer(QDialog):
             )
 
         except Exception as e:
-            # Show error message
             QMessageBox.critical(
                 self,
                 "Save Error",

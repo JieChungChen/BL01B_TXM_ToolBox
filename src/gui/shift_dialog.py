@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
 from PyQt5.QtGui import QFont
 
 
-class YShiftDialog(QDialog):
+class ShiftDialog(QDialog):
     """Dialog for setting Y-axis shift amount."""
 
     def __init__(self, image_height, parent=None):

@@ -15,7 +15,7 @@ class AlignViewer(QDialog):
         self.setModal(True)
 
         self.tomo = tomography
-        self.proj_images = [norm_to_8bit(img.copy()) for img in self.tomo.as_array()]
+        self.proj_images = [norm_to_8bit(img.copy()) for img in self.tomo.get_array()]
         self.red_points = [None] * len(self.proj_images)
         self.last_dir = last_dir
 

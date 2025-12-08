@@ -6,8 +6,8 @@ from src.logic.utils import norm_to_8bit
 
 
 class DuplicateAngleResolver(QDialog):
-    def __init__(self, images: list[np.ndarray], theta_value: float, parent=None):
-        super().__init__(parent)
+    def __init__(self, images, theta_value):
+        super().__init__()
         self.setWindowTitle(f"Select best image for θ = {theta_value:.2f}")
         self.selected_idx = None
 
@@ -36,7 +36,7 @@ class DuplicateAngleResolver(QDialog):
         return self.selected_idx
 
 
-def resolve_duplicates(images, thetas, duplicates, parent=None):
+def resolve_duplicates(images, thetas, duplicates):
     selected_images = []
     selected_thetas = []
 
@@ -44,7 +44,7 @@ def resolve_duplicates(images, thetas, duplicates, parent=None):
         imgs = [images[i] for i in group]
         theta_val = thetas[group[0]]
 
-        dialog = DuplicateAngleResolver(imgs, theta_val, parent)
+        dialog = DuplicateAngleResolver(imgs, theta_val)
         if dialog.exec_() == QDialog.Accepted:
             idx = dialog.get_selection()
             chosen_idx = group[idx]

@@ -1,19 +1,18 @@
 import os
 import sys
-from PyQt5.QtWidgets import (QProgressDialog, QApplication, QMainWindow,
-                              QFileDialog, QMessageBox, QDialog)
+from PyQt5.QtWidgets import QProgressDialog, QApplication, QMainWindow, QFileDialog, QMessageBox, QDialog
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt
-from src.gui.integrate_multi_txrm import resolve_duplicates
+from src.gui.duplicates_selector import resolve_duplicates
 from src.gui.contrast_dialog import ContrastDialog
 from src.gui.manual_alignment import AlignViewer
 from src.gui.fbp_viewer import FBPViewer, FBPResolutionDialog
 from src.gui.mosaic_viewer import MosaicPreviewDialog
-from src.gui.y_shift_dialog import YShiftDialog
+from src.gui.shift_dialog import ShiftDialog
 from src.gui.main_window import Ui_TXM_ToolBox
 from src.logic import data_io
 from src.logic.app_context import AppContext
-from src.logic.tomography import TXM_Images
+from src.logic.image_container import TXM_Images
 from src.logic.fbp import FBPWorker
 from src.logic.utils import norm_to_8bit, find_duplicate_angles
 from src.logic.decorators import handle_errors
@@ -39,7 +38,9 @@ class TXM_ToolBox(QMainWindow):
         self.ui.action_tomo_tifs.triggered.connect(lambda: self.load_tifs('tomo'))
         self.ui.action_mosaic_txrm.triggered.connect(self.load_mosaic)
         self.ui.action_mosaic_tifs.triggered.connect(lambda: self.load_tifs('mosaic'))
-        self.ui.action_save_img.triggered.connect(self.save_image)
+        self.ui.action_single_xrm.triggered.connect(self.load_single)
+        self.ui.action_save_raw.triggered.connect(lambda: self.save_image('global'))
+        self.ui.action_save_norm.triggered.connect(lambda: self.save_image('each'))
         
         self.ui.action_vertical_flip.triggered.connect(self.vertical_flip)
         self.ui.action_reference.triggered.connect(self.load_ref)
@@ -108,6 +109,22 @@ class TXM_ToolBox(QMainWindow):
         self.update_env()
         self.show_info_message("TXM Metadata", metadata)
 
+    @handle_errors(title="Load XRM Error")
+    def load_single(self, *args):
+        '''
+        載入single xrm原始檔
+        '''
+        filename, _ = QFileDialog.getOpenFileName(self, "Open .xrm file", self.context.last_load_dir, "*.xrm")
+        if not filename:
+            return
+
+        images, metadata, ref = data_io.read_txm_raw(filename, mode='single')
+        self.context.set_from_file(filename, 'single')
+        self.context.images = TXM_Images(images, 'single', metadata)
+        self.context.images.apply_ref(ref)
+        self.update_env()
+        self.show_info_message("TXM Metadata", metadata)
+
     @handle_errors(title="Load TIFs Error")
     def load_tifs(self, mode):
         '''
@@ -161,7 +178,8 @@ class TXM_ToolBox(QMainWindow):
     def update_env(self):
         """Update UI state after loading images."""
         self.ui.action_reference.setEnabled(True)
-        self.ui.action_save_img.setEnabled(True)
+        self.ui.action_save_raw.setEnabled(True)
+        self.ui.action_save_norm.setEnabled(True)
         self.ui.action_vertical_flip.setEnabled(True)
         self.ui.action_y_shift.setEnabled(True)
         self.ui.action_adjust_contrast.setEnabled(True)
@@ -177,23 +195,20 @@ class TXM_ToolBox(QMainWindow):
         self.context.images.flip_vertical()
         self.update_image(self.current_id)
 
-    @handle_errors(title="Y-Shift Error")
     def apply_y_shift(self, *args):
-        img_array = self.context.get_images()
-        image_height = img_array.shape[1]  # (N, H, W)
+        h, w = self.context.get_image_size()
 
-        dialog = YShiftDialog(image_height, self)
+        dialog = ShiftDialog(h, self)
         if dialog.exec_() != QDialog.Accepted:
             return 
 
         shift_amount = dialog.get_shift_amount()
-
         if shift_amount == 0:
             return
 
         self.context.images.y_shift(shift_amount)
         self.update_image(self.current_id)
-        self.statusBar().showMessage(f"Applied Y-shift: {shift_amount} pixels", 3000)
+        self.show_info_message("Success", f"Applied y-shift {shift_amount} pixels")
 
     def on_contrast_live_update(self, clip_lower, clip_upper):
         """Handle contrast adjustment updates from dialog."""
@@ -261,7 +276,7 @@ class TXM_ToolBox(QMainWindow):
             dialog.exec_()
 
     @handle_errors(title="Save Image Error")
-    def save_image(self, *args):
+    def save_image(self, save_mode):
         """Save images as TIF sequence."""
         default_path = os.path.join(self.context.last_save_dir, f"{self.context.sample_name}.tif")
         filename, _ = QFileDialog.getSaveFileName(self, "Save images", default_path, "TIFF files (*.tif)")
@@ -269,9 +284,10 @@ class TXM_ToolBox(QMainWindow):
             return
 
         self.context.last_save_dir = os.path.dirname(filename)
+        sample_name = os.path.splitext(os.path.basename(filename))[0]
         data_io.save_tif(self.context.last_save_dir, 
-                         self.context.sample_name, 
-                         self.context.get_images())
+                         sample_name, 
+                         self.context.get_images(), save_mode)
 
         self.show_info_message("Save image", f"Success! TIF images saved to '{self.context.last_save_dir}'.")
     

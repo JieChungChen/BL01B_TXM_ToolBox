@@ -22,6 +22,11 @@ class AppContext:
     
     def get_images(self):
         return self.images.get_array()
+    
+    def get_image_size(self):
+        if self.images is not None:
+            return self.images.get_image(0).shape
+        return None
 
     @property
     def metadata(self):

@@ -130,10 +130,18 @@
      <addaction name="action_mosaic_txrm"/>
      <addaction name="action_mosaic_tifs"/>
     </widget>
+    <widget class="QMenu" name="menuSave">
+     <property name="title">
+      <string>Save</string>
+     </property>
+     <addaction name="action_save_norm"/>
+     <addaction name="action_save_raw"/>
+    </widget>
     <addaction name="menuLoad_Tomo"/>
     <addaction name="menuLoad_mosaic"/>
+    <addaction name="action_single_xrm"/>
     <addaction name="separator"/>
-    <addaction name="action_save_img"/>
+    <addaction name="menuSave"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -179,14 +187,6 @@
    </property>
    <property name="shortcutVisibleInContextMenu">
     <bool>false</bool>
-   </property>
-  </action>
-  <action name="action_save_img">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Save</string>
    </property>
   </action>
   <action name="action_tomo_tifs">
@@ -255,6 +255,27 @@
    </property>
    <property name="text">
     <string>Y-axis Shift</string>
+   </property>
+  </action>
+  <action name="action_save_norm">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Normalized</string>
+   </property>
+  </action>
+  <action name="action_save_raw">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Raw</string>
+   </property>
+  </action>
+  <action name="action_single_xrm">
+   <property name="text">
+    <string>Load single</string>
    </property>
   </action>
  </widget>

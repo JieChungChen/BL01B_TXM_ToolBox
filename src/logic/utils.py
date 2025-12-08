@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def norm_to_8bit(img: np.ndarray, clip_lower=0.0, clip_upper=0.5, clip_percent=None, inverse=False):
+def norm_to_8bit(img: np.ndarray, clip_lower=0.1, clip_upper=0.1, clip_percent=None, inverse=False):
     """
     Normalize image to 8-bit with percentile clipping.
 
@@ -86,3 +86,10 @@ def find_duplicate_angles(thetas):
 
     duplicates = [v for v in bucket.values() if len(v) > 1]
     return duplicates
+
+
+def image_resize(img, size):
+    from PIL import Image
+    img = Image.fromarray(img)
+    img = img.resize((size, size))
+    return np.array(img)

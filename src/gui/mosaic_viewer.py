@@ -6,7 +6,7 @@ from PIL import Image
 
 
 class MosaicPreviewDialog(QDialog):
-    def __init__(self, mosaic_img, info):
+    def __init__(self, mosaic_img, context):
         """
         Mosaic preview dialog with contrast adjustment.
 
@@ -16,8 +16,8 @@ class MosaicPreviewDialog(QDialog):
         """
         super().__init__()
         self.mosaic_img = mosaic_img  # shape: (H, W)
-        self.info = info
-        self.metadata = info.metadata or {}
+        self.info = context
+        self.metadata = context.metadata or {}
         self.clip_lower = 0.0  # Lower clip percentage
         self.clip_upper = 0.5  # Upper clip percentage
 
