@@ -91,5 +91,5 @@ def find_duplicate_angles(thetas):
 def image_resize(img, size):
     from PIL import Image
     img = Image.fromarray(img)
-    img = img.resize((size, size))
+    img = img.resize((size, size), Image.LANCZOS)
     return np.array(img)

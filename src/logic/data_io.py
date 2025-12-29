@@ -97,6 +97,7 @@ def load_ref(filename):
     image_type = filename.split('.')[-1]
     if image_type=='xrm':
         ref_img, metadata, _ = read_txm_raw(filename, 'single')
+        ref_img = ref_img.squeeze()
     else:
         ref_img = Image.open(filename)
     return ref_img
