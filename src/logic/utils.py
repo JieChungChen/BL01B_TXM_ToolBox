@@ -1,29 +1,26 @@
 import numpy as np
 
 
-def norm_to_8bit(img: np.ndarray, clip_lower=0.1, clip_upper=0.1, clip_percent=None, inverse=False):
+def norm_to_8bit(img: np.ndarray, clip_lower=0.1, clip_upper=0.1, inverse=False):
     """
-    Normalize image to 8-bit with percentile clipping.
+    clip the array by percentile and normalize to 8-bit.
 
-    Args:
-        img: Input image array
-        clip_lower: Percentage to clip from lower end (darkest pixels)
-        clip_upper: Percentage to clip from upper end (brightest pixels)
-        clip_percent: Legacy parameter for backward compatibility (clips upper only)
-        inverse: Invert the image
+    Parameters
+    ----------
+    img: input image array
+    clip_lower: lower clip percentile (darkest pixels)
+    clip_upper: upper clip percentile (brightest pixels)
+    clip_percent: old parameter (only clips upper limit)
+    inverse: whether to invert
 
-    Returns:
-        8-bit normalized image
+    Returns
+    -------
+    8-bit normalized image
     """
-    # Backward compatibility: if clip_percent is provided, use it for upper clip
-    if clip_percent is not None:
-        clip_upper = clip_percent
-        clip_lower = 0.0
-
     vmin = np.percentile(img, clip_lower)
     vmax = np.percentile(img, 100 - clip_upper)
 
-    # Avoid division by zero
+    # Avoid division by zero.
     if vmax == vmin:
         vmax = vmin + 1e-7
 
@@ -37,9 +34,34 @@ def norm_to_8bit(img: np.ndarray, clip_lower=0.1, clip_upper=0.1, clip_percent=N
     return img
 
 
+def norm_hs_to_8bit(hs: np.ndarray, clip_lower=0.1, clip_upper=0.1):
+    """
+    Normalize horizontal sum array to 8-bit.
+
+    Parameters
+    -----------
+    hs: horizontal sum array
+    clip_lower: lower clip percentile (darkest pixels)
+    clip_upper: upper clip percentile (brightest pixels)
+
+    Returns
+    -------
+    8-bit normalized horizontal sum array
+    """
+    hs = hs.astype(np.float32)
+    
+    for i in range(hs.shape[0]):
+        vmin = np.percentile(hs[i], clip_lower)
+        vmax = np.percentile(hs[i], 100 - clip_upper)
+        hs[i, :] = (hs[i, :] - vmin) / (vmax - vmin)
+        hs[i, :] = np.clip(hs[i, :], 0, 1)
+    hs = (hs * 255).astype(np.uint8)
+    return hs
+
+
 def split_mosaic(img: np.ndarray, rows: int, cols: int):
     if img.ndim == 2:
-        img = img[None, ...]  # 轉成 (1, H, W)
+        img = img[None, ...]
 
     N, H_total, W_total = img.shape
     H_patch = H_total // rows
@@ -61,7 +83,7 @@ def split_mosaic(img: np.ndarray, rows: int, cols: int):
 
 def mosaic_stitching(patches: np.ndarray, rows: int, cols: int):
     N, H, W = patches.shape
-    assert N % (rows * cols) == 0, "patch 數量無法剛好組成 mosaic"
+    assert N % (rows * cols) == 0, "區塊數量無法剛好組成拼接影像"
 
     mosaic = np.zeros((rows * H, cols * W), dtype=patches.dtype)
 
@@ -75,9 +97,9 @@ def mosaic_stitching(patches: np.ndarray, rows: int, cols: int):
     return mosaic
 
 
-def find_duplicate_angles(thetas):
+def find_duplicate_angles(thetas: np.ndarray):
     """
-    回傳重複角度的索引集合 [[idx1, idx2], [idx3, idx4, idx5], ...]
+    回傳重複角度的索引集合（例如 [[idx1, idx2], [idx3, idx4, idx5], ...]）。
     """
     from collections import defaultdict
     bucket = defaultdict(list)
@@ -88,8 +110,82 @@ def find_duplicate_angles(thetas):
     return duplicates
 
 
+def angle_sort(images: np.ndarray, thetas: np.ndarray):
+    """
+    根據角度對影像和角度進行排序。
+    """
+    sorted_indices = np.argsort(thetas)
+    sorted_images = images[sorted_indices]
+    sorted_thetas = thetas[sorted_indices]
+    return sorted_images, sorted_thetas
+
+
 def image_resize(img, size):
     from PIL import Image
     img = Image.fromarray(img)
-    img = img.resize((size, size), Image.LANCZOS)
+    img = img.resize((size, size), Image.NEAREST)
     return np.array(img)
+
+
+def common_line_method(features, search_range=150, c_line='center', similarity_mode='gradient'):
+    '''
+    Align tomography vertical shift using common line method.
+
+    Parameters:
+    -----------
+    features: np.ndarray
+        Horizontal sum array of shape (N_projections, Height)
+        Note: This should be passed as (N, H), not (H, N).
+    search_range: int
+        vertical shift search range in pixels
+    c_line: str
+        'average' or 'center' - how to calculate reference common line
+    similarity_mode: str
+        'sum' or 'gradient' - use horizontal sum or its gradient for similarity
+
+    Returns:
+    --------
+    aligned_tomo: numpy array
+        vertically aligned tomography
+    shifts: numpy array
+        vertical shift for each projection
+    '''
+    n_proj, size = features.shape
+
+
+    # Apply gradient if needed
+    if similarity_mode == 'gradient':
+        features = np.gradient(features, axis=1)
+
+    # Calculate reference common line
+    if c_line == 'average':
+        c_line = features.mean(axis=0)
+    elif c_line == 'center':
+        c_line = features[n_proj//2]
+
+    # Grid search for best vertical shift
+    shifts = np.zeros(n_proj, dtype=int)
+
+    for i in range(n_proj):
+        best_shift = 0
+        best_score = -np.inf
+
+        # Search in range [-search_range, search_range]
+        for shift in range(-search_range, search_range + 1):
+            signal1 = np.roll(features[i], shift, axis=0)
+
+            # Normalize both signals
+            signal1 = signal1 - np.mean(signal1)
+            signal2 = c_line - np.mean(c_line)
+
+            # Compute correlation coefficient
+            correlation = np.sum(signal1 * signal2) / (np.sqrt(np.sum(signal1**2)) * np.sqrt(np.sum(signal2**2)))
+
+            # Update best shift if this is better
+            if correlation > best_score:
+                best_score = correlation
+                best_shift = shift
+
+        shifts[i] = best_shift
+
+    return shifts

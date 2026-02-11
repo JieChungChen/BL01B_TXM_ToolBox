@@ -8,51 +8,65 @@ import os
 
 
 class FBPResolutionDialog(QDialog):
-    """Dialog for selecting FBP reconstruction resolution."""
+    """FBP 重建解析度選擇對話框。"""
 
     def __init__(self, original_size, parent=None):
         """
-        Initialize resolution selection dialog.
-
         Args:
-            original_size: Tuple of (height, width) of original images
-            parent: Parent widget
+            original_size: 原始影像尺寸（高度、寬度）
         """
         super().__init__(parent)
         self.setWindowTitle("FBP Reconstruction Settings")
-        self.setMinimumWidth(450)
+        self.setFixedSize(450, 500)
 
-        # Set font
+        # 統一 Dialog 外觀
+        self.setStyleSheet("""
+            QDialog {
+                border: 1px solid #e2e2e2;
+                border-radius: 12px;
+                background: #fafbfc;
+            }
+        """)
+        # 檢查astra套件是否可用
+        self.astra_available = self.check_astra()
+
+        # 設定字體。
         font = QFont("Calibri", 12)
         self.setFont(font)
 
-        self.selected_size = 128  # Default
-        self.angle_interval = 1.0  # Default angle interval in degrees
+        self.selected_size = 128  # 預設值
+        self.angle_interval = 1.0  # 預設角度間隔（度）
 
-        # Main layout
+        # 主版面配置。
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
 
-        # Info label
+        # 資訊標籤。
         info_label = QLabel(f"<b>Original Image Size:</b> {original_size[0]}×{original_size[1]}")
-        info_label.setStyleSheet("font-family: Calibri; font-size: 13pt; padding: 12px;")
+        info_label.setStyleSheet("font-family: Calibri; font-size: 14pt; padding: 8px;")
         layout.addWidget(info_label)
 
-        # Angle interval group
+        # astra支援標籤。
+        astra_status = "astra GPU acceleration available" if self.astra_available else "astra GPU acceleration not available"
+        astra_label = QLabel(f"<b>Astra Status:</b> {astra_status}")
+        astra_label.setStyleSheet("font-family: Calibri; font-size: 14pt; padding: 8px; color: green;" if self.astra_available else "font-family: Calibri; font-size: 14pt; padding: 8px; color: red;")
+        layout.addWidget(astra_label)
+
+        # 角度間隔群組。
         angle_group = QGroupBox("Angle Interval")
-        angle_group.setStyleSheet("font-family: Calibri; font-size: 12pt; font-weight: bold;")
+        angle_group.setStyleSheet("font-family: Calibri; font-size: 14pt; font-weight: bold;")
         angle_layout = QHBoxLayout()
         angle_layout.setSpacing(10)
 
         angle_label = QLabel("Projection angle interval:")
-        angle_label.setStyleSheet("font-family: Calibri; font-size: 12pt; font-weight: normal;")
+        angle_label.setStyleSheet("font-family: Calibri; font-size: 14pt; font-weight: normal;")
 
         self.angle_spinbox = QSpinBox()
         self.angle_spinbox.setMinimum(1)
         self.angle_spinbox.setMaximum(90)
         self.angle_spinbox.setValue(1)
         self.angle_spinbox.setSuffix(" degree(s)")
-        self.angle_spinbox.setStyleSheet("font-family: Calibri; font-size: 12pt;")
+        self.angle_spinbox.setStyleSheet("font-family: Calibri; font-size: 14pt;")
         self.angle_spinbox.valueChanged.connect(self.set_angle_interval)
 
         angle_layout.addWidget(angle_label)
@@ -61,74 +75,77 @@ class FBPResolutionDialog(QDialog):
         angle_group.setLayout(angle_layout)
         layout.addWidget(angle_group)
 
-        # Resolution selection group
+        # 解析度選擇群組。
         group_box = QGroupBox("Select Reconstruction Resolution")
-        group_box.setStyleSheet("font-family: Calibri; font-size: 12pt; font-weight: bold;")
+        group_box.setStyleSheet("font-family: Calibri; font-size: 14pt; font-weight: bold;")
         group_layout = QVBoxLayout()
-        group_layout.setSpacing(8)
+        group_layout.setSpacing(10)
 
-        # Radio buttons
-        self.radio_64 = QRadioButton("64×64 (Fastest, ~2-5 seconds)")
-        self.radio_128 = QRadioButton("128×128 (Fast, ~5-15 seconds) — Recommended")
-        self.radio_256 = QRadioButton("256×256 (Moderate, ~30-60 seconds)")
-        self.radio_512 = QRadioButton("512×512 (Slow, ~2-5 minutes)")
-        self.radio_original = QRadioButton(f"Original ({min(original_size[0], original_size[1])}×{min(original_size[0], original_size[1])}) (Very slow)")
+        # 單選按鈕。
+        self.radio_128 = QRadioButton("B8: 128×128 (~5-15 seconds for CPU)")
+        self.radio_256 = QRadioButton("B4: 256×256 (~1 minutes for CPU)")
+        self.radio_512 = QRadioButton("B2: 512×512 (>10 minutes for CPU)")
 
-        # Set default
+        # 設定預設值。
         self.radio_128.setChecked(True)
 
-        # Style radio buttons
-        radio_style = "font-family: Calibri; font-size: 12pt; font-weight: normal; padding: 5px;"
-        self.radio_64.setStyleSheet(radio_style)
+        # 設定單選按鈕樣式。
+        radio_style = "font-family: Calibri; font-size: 14pt; font-weight: normal; padding: 5px;"
         self.radio_128.setStyleSheet(radio_style)
         self.radio_256.setStyleSheet(radio_style)
         self.radio_512.setStyleSheet(radio_style)
-        self.radio_original.setStyleSheet(radio_style)
 
-        # Connect signals
-        self.radio_64.toggled.connect(lambda checked: checked and self.set_size(64))
+        # 連接事件。
         self.radio_128.toggled.connect(lambda checked: checked and self.set_size(128))
         self.radio_256.toggled.connect(lambda checked: checked and self.set_size(256))
         self.radio_512.toggled.connect(lambda checked: checked and self.set_size(512))
-        self.radio_original.toggled.connect(lambda checked: checked and self.set_size(None))
 
-        group_layout.addWidget(self.radio_64)
         group_layout.addWidget(self.radio_128)
         group_layout.addWidget(self.radio_256)
         group_layout.addWidget(self.radio_512)
-        group_layout.addWidget(self.radio_original)
         group_box.setLayout(group_layout)
         layout.addWidget(group_box)
 
-        # Warning label
+        # 警示標籤。
         warning_label = QLabel(
             "<i>⚠ Higher resolutions require more computation time and memory.</i>"
         )
-        warning_label.setStyleSheet("font-family: Calibri; font-size: 11pt; color: #d35400; padding: 8px;")
+        warning_label.setStyleSheet("font-family: Calibri; font-size: 13pt; color: #d35400; padding: 8px;")
         warning_label.setWordWrap(True)
         layout.addWidget(warning_label)
 
-        # Buttons
+        # 按鈕。
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.setStyleSheet("font-family: Calibri; font-size: 12pt;")
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
+    def check_astra(self):
+        """檢查astra-toolbox套件是否安裝。"""
+        try:
+            import astra
+            return True
+        except ImportError:
+            return False
+        
+    def get_astra_available(self):
+        """取得astra套件可用狀態。"""
+        return self.astra_available
+    
     def set_size(self, size):
-        """Set the selected reconstruction size."""
+        """設定選取的重建尺寸。"""
         self.selected_size = size
 
     def set_angle_interval(self, value):
-        """Set the angle interval."""
+        """設定角度間隔。"""
         self.angle_interval = float(value)
 
     def get_size(self):
-        """Get the selected reconstruction size."""
+        """取得選取的重建尺寸。"""
         return self.selected_size
 
     def get_angle_interval(self):
-        """Get the angle interval."""
+        """取得角度間隔。"""
         return self.angle_interval
 
 
@@ -141,37 +158,61 @@ class FBPViewer(QDialog):
 
         self.n_slices, self.height, self.width = recon_images.shape
 
-        # Set window properties
-        self.setMinimumSize(600, 600)
-        self.resize(800, 800)
+        # 設定視窗屬性。
+        self.setFixedSize(800, 800)
 
-        # Set font
+        # 統一 Dialog 外觀
+        self.setStyleSheet("""
+            QDialog {
+                border: 1px solid #e2e2e2;
+                border-radius: 12px;
+                background: #fafbfc;
+            }
+        """)
+        # 設定字體。
         font = QFont("Calibri", 10)
         self.setFont(font)
 
-        # Image label
+        # 影像標籤。
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignCenter)
         self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.image_label.setScaledContents(False)
 
-        # Info label
+        # 資訊標籤。
         self.info_label = QLabel()
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-family: Calibri; font-size: 10pt; color: #555; padding: 5px;")
 
-        # Slider
+        # 滑桿。
         self.slider = QSlider(Qt.Horizontal)
+        # 統一滑桿樣式
+        slider_style = """
+            QSlider::groove:horizontal {
+                border: 1px solid #bfbfbf;
+                height: 6px;
+                border-radius: 3px;
+                background: #dedede;
+            }
+            QSlider::handle:horizontal {
+                background: #1f6feb;
+                border: none;
+                width: 14px;
+                margin: -4px 0;
+                border-radius: 7px;
+            }
+        """
+        self.slider.setStyleSheet(slider_style)
         self.slider.setMinimum(0)
         self.slider.setMaximum(self.n_slices - 1)
         self.slider.valueChanged.connect(self.update_image)
 
-        # Save button
-        self.save_button = QPushButton("Save Reconstruction as TIF Series")
+        # 儲存按鈕。
+        self.save_button = QPushButton("Save Reconstruction as TIF Files")
         self.save_button.setStyleSheet("font-family: Calibri; font-size: 12pt; padding: 8px;")
         self.save_button.clicked.connect(self.save_reconstruction)
 
-        # Layout
+        # 版面配置。
         layout = QVBoxLayout(self)
         layout.addWidget(self.image_label, stretch=1)
         layout.addWidget(self.info_label)
@@ -181,22 +222,22 @@ class FBPViewer(QDialog):
         self.update_image(0)
 
     def resizeEvent(self, event):
-        """Handle window resize events."""
+        """處理視窗大小變更事件。"""
         super().resizeEvent(event)
         self.update_image(self.current_index)
 
     def update_image(self, index):
-        """Update displayed image and window title."""
+        """更新顯示影像與視窗標題。"""
         self.current_index = index
         img = self.recon_images[index]
         h, w = img.shape
 
-        # Create QImage without any interpolation on the original data
+        # 建立 QImage（不對原始資料進行插值）。
         qimg = QImage(img.data, w, h, w, QImage.Format_Grayscale8)
         pixmap = QPixmap.fromImage(qimg)
 
-        # Scale to fit label while maintaining aspect ratio
-        # Use SmoothTransformation for better visual quality when displaying
+        # 縮放以符合標籤大小並維持長寬比。
+        # 顯示時使用 SmoothTransformation 以提升視覺品質。
         label_w = self.image_label.width()
         label_h = self.image_label.height()
 
@@ -210,18 +251,18 @@ class FBPViewer(QDialog):
         else:
             self.image_label.setPixmap(pixmap)
 
-        # Update window title
+        # 更新視窗標題。
         self.setWindowTitle(
             f"FBP Reconstruction - {self.width}x{self.height} - Slice {index + 1}/{self.n_slices}"
         )
 
-        # Update info label
+        # 更新資訊標籤。
         self.info_label.setText(
             f"Resolution: {self.width}x{self.height} | Slice: {index + 1}/{self.n_slices}"
         )
 
     def save_reconstruction(self):
-        """Save all reconstruction slices as TIF series."""
+        """將所有重建切片儲存為 TIF 檔。"""
         output_dir = QFileDialog.getExistingDirectory(self, "Select Directory to Save Reconstruction", "", QFileDialog.ShowDirsOnly)
 
         if not output_dir:

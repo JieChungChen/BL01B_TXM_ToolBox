@@ -1,11 +1,9 @@
-"""Decorators for error handling and logging."""
 import functools
 import traceback
 from PyQt5.QtWidgets import QMessageBox
 
 
 def handle_errors(title="Error"):
-    """Decorator to handle exceptions and show error message boxes."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
